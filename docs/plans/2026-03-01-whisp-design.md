@@ -21,16 +21,20 @@ Content-Type: application/json
 ```
 
 The bot (chatgpt-bot) sends 48kHz mono WAV from Opus-decoded Telegram voice messages.
-whisper.cpp's `read_wav()` resamples to 16kHz internally. No resampler needed.
+`read_audio_data()` (via miniaudio) resamples to 16kHz internally. No resampler needed.
 
 ## Architecture
 
 Single C++ binary (~200 lines). Links whisper.cpp as a library.
 
-- `httplib.h` for HTTP (vendored in whisper.cpp)
+- `httplib.h` for HTTP (vendored in whisper.cpp/examples/server/)
 - `whisper.h` for inference
-- `common.h` + `dr_wav.h` for WAV parsing
+- `common-whisper.h` + `miniaudio.h` for WAV decoding and resampling via `read_audio_data()`
+- `json.hpp` (nlohmann) for JSON response formatting
 - Single mutex — one inference at a time (sufficient for single-user bot on localhost)
+
+**Note:** `detect_language` must NOT be set to `true` — it causes whisper to exit after
+language detection without transcribing. Setting `language = "auto"` alone is sufficient.
 
 ## CLI
 

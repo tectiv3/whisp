@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(git:*)",
+      "Bash(cmake:*)",
+      "Bash(python3:*)",
+      "Bash(./build/bin/whisper-cli:*)",
+      "Bash(bash test.sh)",
+      "Bash(ls:*)"
+    ]
+  }
+}

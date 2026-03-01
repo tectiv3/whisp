@@ -1,0 +1,6 @@
+{
+  "model": "/opt/whisp/models/ggml-small.bin",
+  "port": 8765,
+  "threads": 4,
+  "language": "auto"
+}

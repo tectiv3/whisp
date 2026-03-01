@@ -4,6 +4,7 @@
 #include "json.hpp"
 
 #include <cstdio>
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -18,13 +19,43 @@ struct params {
 };
 
 static void usage(const char * argv0) {
-    fprintf(stderr, "usage: %s -m <model> [-p port] [-t threads] [-l language]\n", argv0);
+    fprintf(stderr, "usage: %s [-m <model>] [-p port] [-t threads] [-l language] [--config <path>]\n", argv0);
+}
+
+static bool load_config(const std::string & path, params & p) {
+    std::ifstream f(path);
+    if (!f.is_open()) {
+        fprintf(stderr, "whisp: cannot open config '%s'\n", path.c_str());
+        return false;
+    }
+    json cfg;
+    try { cfg = json::parse(f); }
+    catch (const json::parse_error & e) {
+        fprintf(stderr, "whisp: config parse error: %s\n", e.what());
+        return false;
+    }
+    if (cfg.contains("model"))    p.model_path = cfg["model"].get<std::string>();
+    if (cfg.contains("port"))     p.port       = cfg["port"].get<int>();
+    if (cfg.contains("threads"))  p.threads    = cfg["threads"].get<int>();
+    if (cfg.contains("language")) p.language   = cfg["language"].get<std::string>();
+    return true;
 }
 
 static bool parse_args(int argc, char ** argv, params & p) {
+    // first pass: load config file so CLI flags can override
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if ((arg == "-m") && i + 1 < argc) {
+        if (arg == "--config" && i + 1 < argc) {
+            if (!load_config(argv[++i], p)) return false;
+            break;
+        }
+    }
+
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--config" && i + 1 < argc) {
+            ++i; // already handled
+        } else if ((arg == "-m") && i + 1 < argc) {
             p.model_path = argv[++i];
         } else if ((arg == "-p") && i + 1 < argc) {
             try { p.port = std::stoi(argv[++i]); }

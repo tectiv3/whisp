@@ -27,9 +27,11 @@ static bool parse_args(int argc, char ** argv, params & p) {
         if ((arg == "-m") && i + 1 < argc) {
             p.model_path = argv[++i];
         } else if ((arg == "-p") && i + 1 < argc) {
-            p.port = std::stoi(argv[++i]);
+            try { p.port = std::stoi(argv[++i]); }
+            catch (...) { usage(argv[0]); return false; }
         } else if ((arg == "-t") && i + 1 < argc) {
-            p.threads = std::stoi(argv[++i]);
+            try { p.threads = std::stoi(argv[++i]); }
+            catch (...) { usage(argv[0]); return false; }
         } else if ((arg == "-l") && i + 1 < argc) {
             p.language = argv[++i];
         } else {
@@ -93,6 +95,7 @@ int main(int argc, char ** argv) {
         wparams.language         = p.language.c_str();
         wparams.n_threads        = p.threads;
         wparams.no_context       = true;
+        wparams.no_timestamps    = true;
 
         if (whisper_full(ctx, wparams, pcmf32.data(), pcmf32.size()) != 0) {
             res.status = 500;

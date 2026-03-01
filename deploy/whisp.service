@@ -1,0 +1,14 @@
+[Unit]
+Description=whisp transcription service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/whisp -m /opt/whisp/models/ggml-small-q5_0.bin -t 4 -l auto
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

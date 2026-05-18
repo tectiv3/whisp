@@ -56,9 +56,31 @@ Everything lives in `src/main.cpp` (~160 lines). No abstractions, no modules.
 ## Key Constraints
 
 - `detect_language` must NOT be set to `true` — it causes whisper to exit after language detection without transcribing. `language = "auto"` alone handles multilingual detection.
-- GPU is disabled (`use_gpu = false`) — target is Pi 5 with no GPU.
+- GPU is disabled (`use_gpu = false`) — Pi 5 has no GPU. On the Intel Mac, Metal initializes but falls back to BLAS (Intel Iris is not supported for inference); the BLAS path via Accelerate is what provides the speedup.
 - The bot sends 48kHz mono WAV; miniaudio handles resampling internally.
 
 ## Deployment
 
-`deploy/whisp.service` is a systemd unit for the Pi 5. Config lives at `/opt/whisp/config.json` in production.
+### Pi 5 (systemd)
+
+`deploy/whisp.service` is a systemd unit. Config lives at `/opt/whisp/config.json` in production.
+
+### MacBook Air — Intel i5 (launchd)
+
+whisp runs here for inference; the Pi 5 bot calls it over Tailscale. Binary and config live at `/Users/lara/bin/`.
+
+Install as a LaunchAgent (starts on login):
+
+```bash
+cp deploy/whisp.plist ~/Library/LaunchAgents/me.whisp.plist
+launchctl load ~/Library/LaunchAgents/me.whisp.plist
+```
+
+Logs: `~/Library/Logs/whisp.log`
+
+Manage:
+```bash
+launchctl stop me.whisp
+launchctl start me.whisp
+launchctl unload ~/Library/LaunchAgents/me.whisp.plist
+```

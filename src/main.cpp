@@ -3,6 +3,7 @@
 #include "httplib.h"
 #include "json.hpp"
 
+#include <chrono>
 #include <cstdio>
 #include <fstream>
 #include <mutex>
@@ -114,7 +115,9 @@ int main(int argc, char ** argv) {
             return;
         }
 
-        fprintf(stderr, "whisp: %.1fs audio\n", float(pcmf32.size()) / WHISPER_SAMPLE_RATE);
+        const float audio_dur = float(pcmf32.size()) / WHISPER_SAMPLE_RATE;
+        fprintf(stderr, "whisp: %.1fs audio, starting inference\n", audio_dur);
+        const auto t0 = std::chrono::steady_clock::now();
 
         std::lock_guard<std::mutex> lock(mtx);
 
@@ -144,6 +147,10 @@ int main(int argc, char ** argv) {
         if (!text.empty() && text[0] == ' ') {
             text.erase(0, 1);
         }
+
+        const auto t1 = std::chrono::steady_clock::now();
+        const float elapsed = std::chrono::duration<float>(t1 - t0).count();
+        fprintf(stderr, "whisp: done in %.1fs (RTF %.2f)\n", elapsed, elapsed / audio_dur);
 
         json result = {{"text", text}};
         res.set_content(result.dump(), "application/json");

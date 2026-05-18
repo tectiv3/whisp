@@ -17,20 +17,32 @@ cmake --build build -j4
 
 Produces `build/whisp`.
 
+### Cross-compile for Intel Mac (from Apple Silicon)
+
+Targeting a MacBook Air with Ice Lake i5 (icelake-client). `-DGGML_NATIVE=OFF` prevents host CPU detection; `-march=icelake-client` enables AVX-512 and Accelerate BLAS on the target. Produces ~2x speedup over a generic x86-64 build.
+
+```bash
+cmake -B build-x86 -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+  -DGGML_NATIVE=OFF \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DCMAKE_CXX_FLAGS="-march=icelake-client" \
+  -DCMAKE_C_FLAGS="-march=icelake-client"
+cmake --build build-x86 -j$(nproc)
+```
+
+Copy `build-x86/whisp` to the target. Sign before adding to macOS firewall:
+
+```bash
+codesign --sign - build-x86/whisp
+```
+
 ## Run
 
 ```bash
 ./build/whisp -m <model-path> [-p 8765] [-t 4] [-l auto]
 ./build/whisp --config config.json    # JSON config, CLI flags override
 ```
-
-## Test
-
-```bash
-./test.sh [model-path] [wav-file]
-```
-
-Starts the server, sends test requests (valid audio, missing field, bad audio), prints results, then kills the server. Defaults to whisper.cpp's bundled tiny model and jfk.wav sample.
 
 ## Architecture
 
